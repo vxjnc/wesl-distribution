@@ -49,6 +49,11 @@ else()
     set_target_properties(wesl PROPERTIES
         IMPORTED_LOCATION "${wesl_bin_SOURCE_DIR}/${WESL_STATICLIB}"
     )
+    if(UNIX AND NOT APPLE)
+        set_target_properties(wesl PROPERTIES
+            INTERFACE_LINK_LIBRARIES "m"
+        )
+    endif()
 endif()
 
 set_target_properties(wesl PROPERTIES
