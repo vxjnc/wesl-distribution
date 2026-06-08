@@ -10,14 +10,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(WESL_OS "windows")
     set(WESL_DYNLIB "wesl_c.dll")
     set(WESL_STATICLIB "wesl_c.lib")
+    set(WESL_EXE "wesl.exe")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(WESL_OS "linux")
     set(WESL_DYNLIB "libwesl_c.so")
     set(WESL_STATICLIB "libwesl_c.a")
+    set(WESL_EXE "wesl")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(WESL_OS "macos")
     set(WESL_DYNLIB "libwesl_c.dylib")
     set(WESL_STATICLIB "libwesl_c.a")
+    set(WESL_EXE "wesl")
 else()
     message(FATAL_ERROR "wesl-distribution: unsupported OS '${CMAKE_SYSTEM_NAME}'")
 endif()
@@ -58,6 +61,12 @@ endif()
 
 set_target_properties(wesl PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${wesl_bin_SOURCE_DIR}"
+)
+
+# --- Create imported target for CLI ---
+add_executable(wesl-cli IMPORTED GLOBAL)
+set_target_properties(wesl-cli PROPERTIES
+    IMPORTED_LOCATION "${wesl_bin_SOURCE_DIR}/${WESL_EXE}"
 )
 
 # --- Helper: copy .so/.dll next to the target binary ---
