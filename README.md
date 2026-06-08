@@ -15,12 +15,13 @@ FetchContent_Declare(wesl
 FetchContent_MakeAvailable(wesl)
 
 target_link_libraries(your_target PRIVATE wesl)
+target_copy_wesl_binaries(your_target)
 ```
 
-By default links the shared library. To use static:
+By default links the static library. To use shared:
 
 ```cmake
-set(WESL_LINK_TYPE "STATIC" CACHE STRING "" FORCE)
+set(WESL_LINK_TYPE "SHARED" CACHE STRING "" FORCE)
 ```
 
 ## Platforms
@@ -35,4 +36,3 @@ set(WESL_LINK_TYPE "STATIC" CACHE STRING "" FORCE)
 ## Building
 
 Binaries are built via GitHub Actions from the official [wesl-rs](https://github.com/webgpu-tools/wesl-rs) source.
-To build a new version, trigger the `Build wesl-c` workflow with the desired tag.
