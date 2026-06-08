@@ -1,0 +1,79 @@
+name: Build wesl-c
+
+on:
+  workflow_dispatch:
+    inputs:
+      wesl_version:
+        description: "wesl-rs tag to build (e.g. v0.4.0)"
+        required: true
+        default: "v0.4.0"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: wesl-linux-x86_64
+            dynlib: libwesl_c.so
+            staticlib: libwesl_c.a
+
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: wesl-windows-x86_64
+            dynlib: wesl_c.dll
+            staticlib: wesl_c.lib
+
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            name: wesl-macos-arm64
+            dynlib: libwesl_c.dylib
+            staticlib: libwesl_c.a
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: wesl-macos-x86_64
+            dynlib: libwesl_c.dylib
+            staticlib: libwesl_c.a
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout wesl-rs
+        uses: actions/checkout@v4
+        with:
+          repository: webgpu-tools/wesl-rs
+          ref: ${{ github.event.inputs.wesl_version }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build -p wesl-c --release --target ${{ matrix.target }}
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir out
+          cp target/${{ matrix.target }}/release/${{ matrix.dynlib }} out/
+          cp target/${{ matrix.target }}/release/${{ matrix.staticlib }} out/
+          cp crates/wesl-c/include/wesl.h out/
+          cd out && zip ../${{ matrix.name }}.zip *
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir out
+          copy target\${{ matrix.target }}\release\${{ matrix.dynlib }} out\
+          copy target\${{ matrix.target }}\release\${{ matrix.staticlib }} out\
+          copy crates\wesl-c\include\wesl.h out\
+          cd out && tar -acf ../${{ matrix.name }}.zip *
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.wesl_version }}
+          files: ${{ matrix.name }}.zip
