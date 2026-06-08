@@ -1,4 +1,4 @@
-name: Build wesl-c
+name: Build wesl-c and wesl-cli
 
 on:
   workflow_dispatch:
@@ -19,24 +19,28 @@ jobs:
             name: wesl-linux-x86_64
             dynlib: libwesl_c.so
             staticlib: libwesl_c.a
+            exe: wesl
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             name: wesl-windows-x86_64
             dynlib: wesl_c.dll
             staticlib: wesl_c.lib
+            exe: wesl.exe
 
           - os: macos-latest
             target: aarch64-apple-darwin
             name: wesl-macos-arm64
             dynlib: libwesl_c.dylib
             staticlib: libwesl_c.a
+            exe: wesl
 
           - os: macos-latest
             target: x86_64-apple-darwin
             name: wesl-macos-x86_64
             dynlib: libwesl_c.dylib
             staticlib: libwesl_c.a
+            exe: wesl
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -52,7 +56,9 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build
-        run: cargo build -p wesl-c --release --target ${{ matrix.target }}
+        run: |
+          cargo build -p wesl-c --release --target ${{ matrix.target }}
+          cargo build -p wesl-cli --release --target ${{ matrix.target }}
 
       - name: Package (Unix)
         if: runner.os != 'Windows'
@@ -60,6 +66,7 @@ jobs:
           mkdir out
           cp target/${{ matrix.target }}/release/${{ matrix.dynlib }} out/
           cp target/${{ matrix.target }}/release/${{ matrix.staticlib }} out/
+          cp target/${{ matrix.target }}/release/${{ matrix.exe }} out/
           cp crates/wesl-c/include/wesl.h out/
           cd out && zip ../${{ matrix.name }}.zip *
 
@@ -69,6 +76,7 @@ jobs:
           mkdir out
           copy target\${{ matrix.target }}\release\${{ matrix.dynlib }} out\
           copy target\${{ matrix.target }}\release\${{ matrix.staticlib }} out\
+          copy target\${{ matrix.target }}\release\${{ matrix.exe }} out\
           copy crates\wesl-c\include\wesl.h out\
           cd out && tar -acf ../${{ matrix.name }}.zip *
 
